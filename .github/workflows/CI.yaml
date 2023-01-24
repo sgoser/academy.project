@@ -124,6 +124,8 @@ jobs:
           # For posting a simple plain text message
           slack-message: |
             GitHub build result: ${{ needs.docker.outputs.out-job-status }}
+            Image was pushed to DockerHub as:
+            ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}
             Commit: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
             Action URL: ${{ env.GITHUB_WORKFLOW_URL }}
         env:
