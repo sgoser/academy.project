@@ -10,7 +10,7 @@ env:
     # secrets.BOT_GITHUB_TOKEN
 
     APP_VERSION: v0.0.6
-    CHART_VERSION: chart-v0.2
+    CHART_VERSION: 0.0.2
     SLACK_CHANNEL_ID: 'C04EWNX7BT3'
     GITHUB_WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     HELM_PATH : ./Helm/wp-project
