@@ -1,0 +1,86 @@
+name: CI. Create HELM chart
+
+on:
+  push:
+    tags: 'chart-*'
+
+env:
+    # REQUIREMENTS
+    # secrets.SLACK_TOKEN
+    # secrets.BOT_GITHUB_TOKEN
+
+    APP_VERSION: v0.0.6
+    CHART_VERSION: chart-v0.2
+    SLACK_CHANNEL_ID: 'C04EWNX7BT3'
+    GITHUB_WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    HELM_PATH : ./Helm/wp-project
+
+jobs:
+  helm:
+    runs-on: ubuntu-latest
+    outputs:
+      out-job-status: ${{ job.status }}
+    steps:
+      - 
+        name: Check out the repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+      - 
+        name: Update appVersion and Chart version
+        run: |
+          sed -i "s/^version:.*$/version: ${{ env.CHART_VERSION }}/" ${{ env.HELM_PATH }}/helm-source/Chart.yaml
+          sed -i "s/^appVersion:.*$/appVersion: ${{ env.APP_VERSION }}/" ${{ env.HELM_PATH }}/helm-source/Chart.yaml
+      - 
+        name: Check appVersion and Chart version
+        run: |
+          cat ${{ env.HELM_PATH }}/helm-source/Chart.yaml
+      - 
+        name: Helm tool
+        uses: Azure/setup-helm@v3
+        with:
+          version: v3.10.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}  
+      - 
+        name: Test manifests
+        continue-on-error: true
+        uses: instrumenta/kubeval-action@master
+        with: 
+          files: ${{ env.HELM_PATH }}/helm-source/templates
+      - 
+        name: Publish Helm charts
+        uses: stefanprodan/helm-gh-pages@master
+        with:
+          charts_dir: ${{ env.HELM_PATH }}
+          target_dir: ${{ env.HELM_PATH }}/helm-releases/
+          branch: deploy
+          linting: off
+          charts_url: https://sgoser.github.io/academy.project/
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          app_version: ${{ env.APP_VERSION }}
+          chart_version: ${{ env.CHART_VERSION }}
+
+  slack:
+    needs: [helm]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Post to a Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          # Slack channel id, channel name, or user id to post message.
+          # See also: https://api.slack.com/methods/chat.postMessage#channels
+          # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
+          channel-id: ${{ env.SLACK_CHANNEL_ID }}
+          # For posting a simple plain text message
+          slack-message: |
+            GitHub helm create result: ${{ needs.helm.outputs.out-job-status }}
+            Helm was created with chart:
+            ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}
+            Commit: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+            Action URL: ${{ env.GITHUB_WORKFLOW_URL }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_TOKEN }}
