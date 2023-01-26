@@ -9,9 +9,14 @@ env:
     # secrets.SLACK_TOKEN
     # secrets.BOT_GITHUB_TOKEN
 
+    # the MOST IMPORTANT parameters as envs for deployment
+
     APP_VERSION: v0.0.6 # used as app version in helm chart and app version used as tag for image in helm templates
-    CHART_VERSION: 0.0.4 # used as chart version
-    SLACK_CHANNEL_ID: 'C04EWNX7BT3'
+    CHART_VERSION: 0.0.5 # used as chart version
+    
+    # other envs
+
+    SLACK_CHANNEL_ID: 'C04LZC84A9X'
     GITHUB_WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     HELM_PATH : ./Helm/wp-project
 
