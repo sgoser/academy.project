@@ -14,7 +14,7 @@ env:
     # secrets.SLACK_TOKEN
     # secrets.DOCKERHUB_TOKEN
     
-    SLACK_CHANNEL_ID: 'C04EWNX7BT3'
+    SLACK_CHANNEL_ID: 'C04LZC84A9X'
     DHUB_USER_NAME: ${{ github.actor }} # used to login dockerhub
     IMAGE_NAME: "academy-wordpress" # used to set image name in dockerhub
     RESULT_FILE: result.log # used as artifact
