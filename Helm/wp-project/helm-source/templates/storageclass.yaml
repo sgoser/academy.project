@@ -6,4 +6,4 @@ metadata:
 provisioner: cluster.local/nfs-nfs-subdir-external-provisioner
 parameters:
   onDelete: "delete"
-  pathPattern: "/project/wordpress/"
+  pathPattern: "/wp-project/"

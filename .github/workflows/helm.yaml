@@ -12,7 +12,7 @@ env:
     # the MOST IMPORTANT parameters as envs for deployment
 
     APP_VERSION: v0.0.6 # used as app version in helm chart and app version used as tag for image in helm templates
-    CHART_VERSION: 0.0.5 # used as chart version
+    CHART_VERSION: 0.1.0 # used as chart version
     
     # other envs
 
