@@ -43,6 +43,7 @@ jobs:
           git config --local user.email "github@github.com"
           git config --local user.name "GitHub Action"
           git add ./ArgoCD
+          git add ${{ env.HELM_PATH }}/helm-source/Chart.yaml
           git commit -m "New Chart version in Argo App YAML"
       - 
         name: Push ArgoCD App YAML changes
