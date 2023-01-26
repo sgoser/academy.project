@@ -149,4 +149,4 @@ jobs:
         with:
           token: ${{ secrets.SLACK_TOKEN }}
           path: ${{ env.RESULT_FILE }}
-          channel: github_action
+          channel: academy_project
