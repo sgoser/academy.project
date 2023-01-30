@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: academy_project
+  name: wp-project
+  namespace: argocd
+spec:
+  destination:
+    namespace: wp-project
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: wp-project
+    repoURL: https://sgoser.github.io/academy.project/Helm/wp-project/helm-releases/
+    targetRevision: 0.1.1
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true

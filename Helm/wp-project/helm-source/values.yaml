@@ -1,0 +1,44 @@
+# Default values for jenkins.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+maintainers:
+  name: Sergey Harbach
+  email: sgoser@gmail.com
+
+# ReplicaSet
+replicaCount: 1
+
+# Image with tag
+image:
+  repository: sgoser/academy-wordpress
+  pullPolicy: IfNotPresent
+
+# Service port configurations
+service:
+  ports:
+    http: 80
+
+# Resource for pod (with different notation)
+resources:
+  requests:
+    cpu: 100m
+    memory: 200Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+# Ingress configurations
+ingress:
+  ingressClass: nginx
+  host: wp-project.k8s-4.sa
+
+wpdbEnvs:
+  - name: WORDPRESS_DB_HOST
+    value: 192.168.201.4:3306
+  - name: WORDPRESS_DB_NAME
+    value: wp_project
+  - name: WORDPRESS_DB_USER
+    value: wp_project_admin
+  - name: WORDPRESS_DB_PASSWORD
+    value: wp_project_pass
