@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       out-job-status: ${{ job.status }}
+      chart-version: ${{ steps.chart_v.outputs.chart_v }}
     steps:
       - 
         name: Check out the repo
@@ -25,49 +26,42 @@ jobs:
         with:
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
           fetch-depth: '0'
-      #- 
-      #  name: Helm tool
-      #  uses: Azure/setup-helm@v3
-      #  with:
-      #    version: v3.10.0
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
       - 
         name: Test manifests
         continue-on-error: true
         uses: instrumenta/kubeval-action@master
         with: 
-          files: ${{ env.HELM_PATH }}/helm-source/templates
-      - 
-        name: Publish Helm charts
-        uses: stefanprodan/helm-gh-pages@master
-        with:
-          charts_dir: ${{ env.HELM_PATH }}
-          target_dir: ${{ env.HELM_PATH }}/helm-releases/
-          branch: main
-          linting: on
-          charts_url: https://sgoser.github.io/academy.project/
-          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          files: ./Helm/wp-project/helm-source/templates
       - 
         name: Make chart version from tag (last 5 chars)
         id: chart_v
         run: |
-          echo "chart_v=$(echo -n ${{ env.IMAGE_TAG }} | tail -c 5)" >> $GITHUB_OUTPUT
+          echo "chart_v=$(echo -n ${{  github.ref_name }} | tail -c 5)" >> $GITHUB_OUTPUT
+      - 
+        name: Publish Helm charts
+        uses: stefanprodan/helm-gh-pages@master
+        with:
+          charts_dir: ./Helm/wp-project
+          target_dir: ./Helm/wp-project/helm-releases/
+          branch: main
+          linting: on
+          charts_url: https://sgoser.github.io/academy.project/
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          chart_version: ${{ steps.chart_v.outputs.chart_v }}
       - 
         name: Update argo application yaml
         run: |
+          git pull origin main
           sed -i "s/targetRevision:.*$/targetRevision: ${{ steps.chart_v.outputs.chart_v }}/" ./ArgoCD/argo-app-wp-project.yaml
+          sed -i "s/^version:.*$/version: ${{ steps.chart_v.outputs.chart_v }}/" ./Helm/wp-project/helm-source/Chart.yaml
           git config --local user.email "github@github.com"
           git config --local user.name "GitHub Action"
           git add ./ArgoCD
-          git add ${{ env.HELM_PATH }}/helm-source/Chart.yaml
+          git add ./Helm/wp-project/helm-source/Chart.yaml
           git commit -m "New Chart version in Argo App YAML"
       -
         name: Push changes
         uses: ad-m/github-push-action@master
-        with:
-          force: true
-          branch: main
 
   slack:
     needs: [helm]
@@ -82,8 +76,8 @@ jobs:
           channel-id: ${{ env.SLACK_CHANNEL_ID }}
           slack-message: |
             GitHub helm create result: ${{ needs.helm.outputs.out-job-status }}
-            Helm was created with chart vesion: ${{ env.CHART_VERSION }} 
-            and image taged as: ${{ env.APP_VERSION }}
+            Helm was created with chart vesion: ${{ steps.chart_v.outputs.chart_v }} 
+            and image taged as: v${{ steps.chart_v.outputs.chart_v }}
             Commit: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
             Action URL: ${{ env.GITHUB_WORKFLOW_URL }}
         env:

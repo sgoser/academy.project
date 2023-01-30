@@ -97,7 +97,7 @@ jobs:
           git config --local user.email "github@github.com"
           git config --local user.name "GitHub Action"
           sed -i "s/^appVersion:.*$/appVersion: ${{ env.IMAGE_TAG }}/" ./Helm/wp-project/helm-source/Chart.yaml
-          sed -i "s/^version:.*$/version: ${{ steps.chart_v.outputs.chart_v }}/" ./Helm//wp-project/helm-source/Chart.yaml
+          sed -i "s/^version:.*$/version: ${{ steps.chart_v.outputs.chart_v }}/" ./Helm/wp-project/helm-source/Chart.yaml
           sed -i "s/^pathPattern:.*$/pathPattern: \"${{ env.IMAGE_TAG }}\"/" ./Helm//wp-project/helm-source/values.yaml
           git add ./Helm/wp-project/helm-source/Chart.yaml
           git commit -m "Workflow: New Chart: ${{ env.IMAGE_TAG }}"
