@@ -17,6 +17,7 @@ env:
     SLACK_CHANNEL_ID: 'C04LZC84A9X'
     DHUB_USER_NAME: ${{ github.actor }} # used to login dockerhub
     IMAGE_NAME: "academy-wordpress" # used to set image name in dockerhub
+    IMAGE_TAG: ${{  github.ref_name }} # used to set TAG image in dockerhub and Helm Chart
     RESULT_FILE: result.log # used as artifact
     WAITING_TIMER: 5 # used in sleep before checking and collecting stats
     ARTIFACT: result-artifact # name of using acrtifact
@@ -49,8 +50,8 @@ jobs:
           push: false
           load: true
           tags: |
-            ${{ env.IMAGE_NAME }}:${{  github.ref_name }}
-            ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:latest
       -
         name: Show images
@@ -59,7 +60,7 @@ jobs:
       - 
         name: Run doker image
         run: |
-          docker run -d --rm -p 80:80 --name ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:${{  github.ref_name }}
+          docker run -d --rm -p 80:80 --name ${{ env.IMAGE_NAME }} ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           sleep ${{ env.WAITING_TIMER }}
           echo "Docker list running containers:" >> ${{ env.RESULT_FILE }}
           docker ps >> ${{ env.RESULT_FILE }}
@@ -79,20 +80,19 @@ jobs:
       -
         name: Push image to Docker Hub
         run: |
-          docker push ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}
+          docker push ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:latest
           echo -e "\n\nImage was pushed to DockerHub as:"  >> ${{ env.RESULT_FILE }}
-          echo "${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}"  >> ${{ env.RESULT_FILE }}
+          echo "${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"  >> ${{ env.RESULT_FILE }}
       - 
         name: Update, tag and push new appVersion in Chart
         run: |
-          git checkout main
           git config --local user.email "github@github.com"
           git config --local user.name "GitHub Action"
-          sed -i "s/^appVersion:.*$/appVersion: ${{  github.ref_name }}/" ./Helm/wp-project/helm-source/Chart.yaml
+          sed -i "s/^appVersion:.*$/appVersion: ${{ env.IMAGE_TAG }}/" ./Helm/wp-project/helm-source/Chart.yaml
           git add ./Helm/wp-project/helm-source/Chart.yaml
-          git tag -a chart-app-${{  github.ref_name }} -m "New app version ${{  github.ref_name }}"
-          git push origin chart-app-${{  github.ref_name }}
+          git tag -a chart-app-${{ env.IMAGE_TAG }} -m "New app version ${{ env.IMAGE_TAG }}"
+          git push origin chart-app-${{ env.IMAGE_TAG }}
       -
         name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -117,8 +117,8 @@ jobs:
           slack-message: |
             GitHub image build result: ${{ needs.docker.outputs.out-job-status }}
             Image was pushed to DockerHub as:
-            ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}
-            Helm Chart appVersion was changed to: ${{  github.ref_name }}
+            ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            Helm Chart appVersion was changed to: ${{ env.IMAGE_TAG }}
             Commit: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
             Action URL: ${{ env.GITHUB_WORKFLOW_URL }}
         env:
