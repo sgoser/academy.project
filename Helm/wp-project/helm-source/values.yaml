@@ -45,4 +45,4 @@ wpdbEnvs:
 
 storageClass:
   onDelete: "retain"
-  pathPattern: "/wp-project/"
+  pathPattern: "/path/"

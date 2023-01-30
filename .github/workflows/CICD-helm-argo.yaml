@@ -62,6 +62,9 @@ jobs:
           git add ./ArgoCD
           git add ${{ env.HELM_PATH }}/helm-source/Chart.yaml
           git commit -m "New Chart version in Argo App YAML"
+      -
+        name: Push changes
+        uses: ad-m/github-push-action@master
 
   slack:
     needs: [helm]
