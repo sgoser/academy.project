@@ -17,5 +17,5 @@ spec:
   targetNamespace: nfs-provisioner
   set:
     nfs.server: 192.168.37.105
-    nfs.path: /mnt/IT-Academy/nfs-data/sa2-22-22/sharbach/
+    nfs.path: /mnt/IT-Academy/nfs-data/sa2-22-22/sharbach/wp-project/
     storageClass.name: nfs

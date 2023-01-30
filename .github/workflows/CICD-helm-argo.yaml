@@ -1,0 +1,84 @@
+name: CICD. Create HELM chart. Argo App.
+
+on:
+  push:
+    tags: 'chart-*'
+
+env:
+    # REQUIREMENTS
+    # secrets.SLACK_TOKEN
+    # secrets.BOT_GITHUB_TOKEN
+
+    SLACK_CHANNEL_ID: 'C04LZC84A9X'
+    GITHUB_WORKFLOW_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    HELM_PATH : ./Helm/wp-project
+
+jobs:
+  helm:
+    runs-on: ubuntu-latest
+    outputs:
+      out-job-status: ${{ job.status }}
+    steps:
+      - 
+        name: Check out the repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          fetch-depth: '0'
+      - 
+        name: Helm tool
+        uses: Azure/setup-helm@v3
+        with:
+          version: v3.10.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}  
+      - 
+        name: Test manifests
+        continue-on-error: true
+        uses: instrumenta/kubeval-action@master
+        with: 
+          files: ${{ env.HELM_PATH }}/helm-source/templates
+      - 
+        name: Publish Helm charts
+        uses: stefanprodan/helm-gh-pages@master
+        with:
+          charts_dir: ${{ env.HELM_PATH }}
+          target_dir: ${{ env.HELM_PATH }}/helm-releases/
+          branch: main
+          linting: on
+          charts_url: https://sgoser.github.io/academy.project/
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+      - 
+        name: Make chart version from tag (last 5 chars)
+        id: chart_v
+        run: |
+          echo "chart_v=$(echo -n ${{ env.IMAGE_TAG }} | tail -c 5)" >> $GITHUB_OUTPUT
+      - 
+        name: Update argo application yaml
+        run: |
+          sed -i "s/targetRevision:.*$/targetRevision: ${{ steps.chart_v.outputs.chart_v }}/" ./ArgoCD/argo-app-wp-project.yaml
+          git config --local user.email "github@github.com"
+          git config --local user.name "GitHub Action"
+          git add ./ArgoCD
+          git add ${{ env.HELM_PATH }}/helm-source/Chart.yaml
+          git commit -m "New Chart version in Argo App YAML"
+
+  slack:
+    needs: [helm]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Post to a Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ env.SLACK_CHANNEL_ID }}
+          slack-message: |
+            GitHub helm create result: ${{ needs.helm.outputs.out-job-status }}
+            Helm was created with chart vesion: ${{ env.CHART_VERSION }} 
+            and image taged as: ${{ env.APP_VERSION }}
+            Commit: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+            Action URL: ${{ env.GITHUB_WORKFLOW_URL }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_TOKEN }}

@@ -42,3 +42,7 @@ wpdbEnvs:
     value: wp_project_admin
   - name: WORDPRESS_DB_PASSWORD
     value: wp_project_pass
+
+storageClass:
+  onDelete: "retain"
+  pathPattern: "/wp-project/"
