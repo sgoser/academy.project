@@ -1,6 +1,13 @@
 name: CI. Create HELM chart
 
+
 on:
+  # Only trigger, when the build workflow succeeded
+  #workflow_run:
+  #  workflows: ["CI. Dockerimage and Chart appVersion"]
+  #  types:
+  #    - completed
+  # Trigger, when manual chart-* tag pushed
   push:
     tags: 'chart-*'
 
@@ -32,26 +39,24 @@ jobs:
         with:
           fetch-depth: '0'
       - 
+        name: Create Chart version from github tag
+        id: chart_v
+        run: |
+          echo "CHART_V=${country: -5}" >> $GITHUB_OUTPUT
+
+      - 
         name: Update appVersion and Chart version
         run: |
-          sed -i "s/^version:.*$/version: ${{ env.CHART_VERSION }}/" ${{ env.HELM_PATH }}/helm-source/Chart.yaml
-          sed -i "s/^appVersion:.*$/appVersion: ${{ env.APP_VERSION }}/" ${{ env.HELM_PATH }}/helm-source/Chart.yaml
+          sed -i "s/^version:.*$/version: ${{ steps.chart_v.outputs.CHART_V }}/" ${{ env.HELM_PATH }}/helm-source/Chart.yaml
       - 
         name: Update argo application yaml
         run: |
-          sed -i "s/targetRevision:.*$/targetRevision: ${{ env.CHART_VERSION }}/" ./ArgoCD/argo-app-wp-project.yaml
+          sed -i "s/targetRevision:.*$/targetRevision: ${{ steps.chart_v.outputs.CHART_V }}/" ./ArgoCD/argo-app-wp-project.yaml
           git config --local user.email "github@github.com"
           git config --local user.name "GitHub Action"
           git add ./ArgoCD
           git add ${{ env.HELM_PATH }}/helm-source/Chart.yaml
           git commit -m "New Chart version in Argo App YAML"
-      - 
-        name: Push ArgoCD App YAML changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.BOT_GITHUB_TOKEN }}
-          branch: deploy
-
       - 
         name: Check appVersion and Chart version
         run: |
