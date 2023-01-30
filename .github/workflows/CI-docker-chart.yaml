@@ -1,11 +1,11 @@
-name: CI. Testing Dockerimage
+name: CI. Dockerimage and Chart appVersion
 
 on:
   release:
     types: [published]
   push:
     tags:
-      - "v*.*.*"
+      - "v*.*"
 #    branches:
 #      - 'main'
 
@@ -27,6 +27,9 @@ jobs:
   docker:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      repository-projects: write
     outputs:
       out-job-status: ${{ job.status }}
     steps:
@@ -39,7 +42,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
-        name: Build and load docker image
+        name: Build and upload docker image
         uses: docker/build-push-action@v3
         with:
           context: ${{ env.DOCKERFILE_PATH }}
@@ -61,26 +64,6 @@ jobs:
           echo "Docker list running containers:" >> ${{ env.RESULT_FILE }}
           docker ps >> ${{ env.RESULT_FILE }}
       - 
-        name: Testing Doker Container User
-        id: container-user
-        run: |
-          echo -e "\nContainer User:"  >> ${{ env.RESULT_FILE }}
-          docker exec ${{ env.IMAGE_NAME }} whoami >> ${{ env.RESULT_FILE }}
-          echo "container-user=$(docker exec ${{ env.IMAGE_NAME }} whoami)" >> $GITHUB_OUTPUT
-      -
-        name: Container-User
-        run: |
-          echo "Container user is: ${{ steps.container-user.outputs.container-user }}"
-      - 
-        name: Warning User is root
-        if: ${{ steps.container-user.outputs.container-user == 'root' }}
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          channel-id: ${{ env.SLACK_CHANNEL_ID }}
-          slack-message: "Warning! Building image user is root!"
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_TOKEN }}
-      - 
         name: Testing Doker Container with CURL
         run: |
           echo -e "\nGet HTTP headers:" >> ${{ env.RESULT_FILE }}
@@ -100,6 +83,16 @@ jobs:
           docker push ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:latest
           echo -e "\n\nImage was pushed to DockerHub as:"  >> ${{ env.RESULT_FILE }}
           echo "${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}"  >> ${{ env.RESULT_FILE }}
+      - 
+        name: Update, tag and push new appVersion in Chart
+        run: |
+          git checkout main
+          git config --local user.email "github@github.com"
+          git config --local user.name "GitHub Action"
+          sed -i "s/^appVersion:.*$/appVersion: ${{  github.ref_name }}/" ./Helm/wp-project/helm-source/Chart.yaml
+          git add ./Helm/wp-project/helm-source/Chart.yaml
+          git tag -a chart-app-${{  github.ref_name }} -m "New app version ${{  github.ref_name }}"
+          git push origin chart-app-${{  github.ref_name }}
       -
         name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -121,11 +114,11 @@ jobs:
           # See also: https://api.slack.com/methods/chat.postMessage#channels
           # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
           channel-id: ${{ env.SLACK_CHANNEL_ID }}
-          # For posting a simple plain text message
           slack-message: |
-            GitHub build result: ${{ needs.docker.outputs.out-job-status }}
+            GitHub image build result: ${{ needs.docker.outputs.out-job-status }}
             Image was pushed to DockerHub as:
             ${{ env.DHUB_USER_NAME }}/${{ env.IMAGE_NAME }}:${{  github.ref_name }}
+            Helm Chart appVersion was changed to: ${{  github.ref_name }}
             Commit: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
             Action URL: ${{ env.GITHUB_WORKFLOW_URL }}
         env:
