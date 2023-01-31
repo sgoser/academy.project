@@ -44,4 +44,4 @@ spec:
       volumes:
       - name: wordpress-persistent-storage
         persistentVolumeClaim:
-          claimName: {{ .Chart.Name }}-pvc
+          claimName: {{ .Chart.AppVersion }}-pvc
