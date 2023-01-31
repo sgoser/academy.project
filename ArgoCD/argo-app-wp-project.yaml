@@ -13,7 +13,9 @@ spec:
   source:
     chart: wp-project
     repoURL: https://sgoser.github.io/academy.project/Helm/wp-project/helm-releases/
-    targetRevision: 0.4.0
+    targetRevision: 0.3.4
   syncPolicy:
+    automated:
+      prune: true
     syncOptions:
     - CreateNamespace=true
