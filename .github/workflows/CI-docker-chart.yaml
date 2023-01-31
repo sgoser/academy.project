@@ -29,9 +29,6 @@ jobs:
   docker:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    #permissions:
-    #  contents: write
-    #  repository-projects: write
     outputs:
       out-job-status: ${{ job.status }}
     steps:
@@ -98,8 +95,8 @@ jobs:
           git config --local user.name "GitHub Action"
           sed -i "s/^appVersion:.*$/appVersion: ${{ env.IMAGE_TAG }}/" ./Helm/wp-project/helm-source/Chart.yaml
           sed -i "s/^version:.*$/version: ${{ steps.chart_v.outputs.chart_v }}/" ./Helm/wp-project/helm-source/Chart.yaml
-          sed -i "s/pathPattern:.*$/pathPattern: ${{ env.IMAGE_TAG }}/" ./Helm//wp-project/helm-source/values.yaml
-          git add ./Helm/wp-project/helm-source/Chart.yaml
+          sed -i "s/pathPattern:.*$/pathPattern: ${{ env.IMAGE_TAG }}/" ./Helm/wp-project/helm-source/values.yaml
+          git add ./Helm/wp-project/helm-source/
           git commit -m "Workflow: New Chart: ${{ env.IMAGE_TAG }}"
           git tag chart-${{ env.IMAGE_TAG }}
       -
@@ -124,9 +121,6 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          # Slack channel id, channel name, or user id to post message.
-          # See also: https://api.slack.com/methods/chat.postMessage#channels
-          # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
           channel-id: ${{ env.SLACK_CHANNEL_ID }}
           slack-message: |
             GitHub image build result: ${{ needs.docker.outputs.out-job-status }}

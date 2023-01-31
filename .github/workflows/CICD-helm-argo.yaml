@@ -76,8 +76,8 @@ jobs:
           channel-id: ${{ env.SLACK_CHANNEL_ID }}
           slack-message: |
             GitHub helm create result: ${{ needs.helm.outputs.out-job-status }}
-            Helm was created with chart vesion: ${{ needs.helm.outputs.outputs.chart_v }} 
-            and image taged as: v${{ needs.helm.outputs.outputs.chart_v }}
+            Helm was created with chart vesion: ${{ needs.helm.outputs.chart-version }} 
+            and image taged as: v${{ needs.helm.outputs.chart-version }}
             Commit: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
             Action URL: ${{ env.GITHUB_WORKFLOW_URL }}
         env:
