@@ -44,5 +44,5 @@ wpdbEnvs:
     value: wp_project_pass
 
 storageClass:
-  onDelete: "retain"
-  pathPattern: "/path/"
+  onDelete: retain
+  pathPattern: path
