@@ -3,6 +3,19 @@ entries:
   wp-project:
   - apiVersion: v2
     appVersion: v0.4.0
+    created: "2023-01-31T22:41:15.296830292Z"
+    description: Wordpress IT-Academy Project
+    digest: dba3ef6a272d43558a0eecddced0e69bf66a65a4c67cd85195ab0d3f773b523e
+    maintainers:
+    - email: sgoser@gmail.com
+      name: Sergey Harbach
+    name: wp-project
+    type: application
+    urls:
+    - https://sgoser.github.io/academy.project/Helm/wp-project/helm-releases/wp-project-0.4.1.tgz
+    version: 0.4.1
+  - apiVersion: v2
+    appVersion: v0.4.0
     created: "2023-01-31T22:25:50.259392273Z"
     description: Wordpress IT-Academy Project
     digest: 3f2a5f0ffe1aff7a8b80e0144942756a723b36ce110185624c3c3b521b68ca3b
@@ -118,4 +131,4 @@ entries:
     urls:
     - https://sgoser.github.io/academy.project/Helm/wp-project/helm-releases/wp-project-0.0.2.tgz
     version: 0.0.2
-generated: "2023-01-31T22:25:50.258351158Z"
+generated: "2023-01-31T22:41:15.296187581Z"
