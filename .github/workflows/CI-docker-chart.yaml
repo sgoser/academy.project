@@ -29,9 +29,6 @@ jobs:
   docker:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    #permissions:
-    #  contents: write
-    #  repository-projects: write
     outputs:
       out-job-status: ${{ job.status }}
     steps:
@@ -100,6 +97,7 @@ jobs:
           sed -i "s/^version:.*$/version: ${{ steps.chart_v.outputs.chart_v }}/" ./Helm/wp-project/helm-source/Chart.yaml
           sed -i "s/pathPattern:.*$/pathPattern: \"${{ env.IMAGE_TAG }}\"/" ./Helm//wp-project/helm-source/values.yaml
           git add ./Helm/wp-project/helm-source/Chart.yaml
+          git add ./Helm//wp-project/helm-source/values.yaml
           git commit -m "Workflow: New Chart: ${{ env.IMAGE_TAG }}"
           git tag chart-${{ env.IMAGE_TAG }}
       -
