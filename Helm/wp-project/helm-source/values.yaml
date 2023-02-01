@@ -45,4 +45,4 @@ wpdbEnvs:
 
 storageClass:
   onDelete: retain
-  pathPattern: v0.5.0
+  pathPattern: v0.6.0
